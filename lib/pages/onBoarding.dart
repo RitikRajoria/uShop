@@ -1,0 +1,124 @@
+import 'package:drivool_assignment/pages/qr_scanner.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/src/foundation/key.dart';
+import 'package:flutter/src/widgets/framework.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class OnBoarding extends StatefulWidget {
+  const OnBoarding({Key? key}) : super(key: key);
+
+  @override
+  State<OnBoarding> createState() => _OnBoardingState();
+}
+
+class _OnBoardingState extends State<OnBoarding> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        color: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 15, right: 15),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const SizedBox(
+                height: 100,
+              ),
+              Container(
+                height: 200,
+                width: 200,
+                child: Image.asset('assets/images/scanner.gif'),
+              ),
+              Column(
+                children: [
+                  Text(
+                    'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',
+                    style: TextStyle(
+                      fontSize: 16,
+                      letterSpacing: 1.2,
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(
+                    height: 18,
+                  ),
+                  Text(
+                    'There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don\'t look even slightly believable.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      letterSpacing: 1.2,
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+              const SizedBox(
+                height: 58,
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    InkWell(
+                      onTap: () {
+                        // to demo page
+                      },
+                      child: Text(
+                        'DEMO',
+                        style: TextStyle(
+                          fontSize: 16,
+                          letterSpacing: 1.2,
+                          color: Colors.green.shade500,
+                        ),
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () async {
+                        SharedPreferences prefs =
+                            await SharedPreferences.getInstance();
+                        prefs.setBool('tutorial', true);
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => QRScanPage(popCheck: false,),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        primary: Colors.green.shade500,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(50)),
+                      ),
+                      child: Container(
+                        height: 50,
+                        child: Row(
+                          children: [
+                            Text(
+                              'CONTINUE  ',
+                              style: TextStyle(
+                                fontSize: 16,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                            Icon(
+                              Icons.arrow_forward_ios,
+                              size: 20,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
