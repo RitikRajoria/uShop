@@ -30,6 +30,7 @@ class _WebViewPageState extends State<WebViewPage> {
   User? user = FirebaseAuth.instance.currentUser;
   late DatabaseReference ref;
   final Future<SharedPreferences> prefs = SharedPreferences.getInstance();
+  late bool showcaseCheck;
 
   BuildContext? myContext;
   final _key1 = GlobalKey();
@@ -49,6 +50,21 @@ class _WebViewPageState extends State<WebViewPage> {
     print(currTime);
   }
 
+  void onShowcaseFinish() async {
+    final _prefs = await prefs;
+    _prefs.setBool('showcaseWebView', true);
+  }
+
+  Future<void> checkShowcase() async {
+    final _prefs = await prefs;
+    bool temp = _prefs.containsKey('showcaseWebView');
+    if (temp == true) {
+      showcaseCheck = _prefs.getBool('showcaseWebView')!;
+    } else {
+      showcaseCheck = false;
+    }
+  }
+
 //converting link to name and
   void linkToData() {
     String link =
@@ -62,9 +78,11 @@ class _WebViewPageState extends State<WebViewPage> {
   }
 
   someEvent() {
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      ShowCaseWidget.of(myContext!).startShowCase([_key1]);
-    });
+    if (!showcaseCheck) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        ShowCaseWidget.of(myContext!).startShowCase([_key1]);
+      });
+    }
 
     setState(() {});
   }
@@ -75,7 +93,9 @@ class _WebViewPageState extends State<WebViewPage> {
     ref = FirebaseDatabase.instance.ref().child('fcm');
 
     savingToDB();
-    someEvent();
+    checkShowcase().then((value) {
+      someEvent();
+    });
     super.initState();
   }
 
@@ -89,6 +109,9 @@ class _WebViewPageState extends State<WebViewPage> {
       child: WillPopScope(
         onWillPop: showExitPopup,
         child: ShowCaseWidget(
+          onFinish: () {
+            onShowcaseFinish();
+          },
           builder: Builder(builder: (context) {
             myContext = context;
             return Scaffold(
