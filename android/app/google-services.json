@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "983678915875",
+    "firebase_url": "https://drivoop-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "drivoop",
+    "storage_bucket": "drivoop.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:983678915875:android:0028ac9825b5e53bfa6896",
+        "android_client_info": {
+          "package_name": "com.example.ushopqrcodescanner"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "983678915875-u5t1iep9238e3por3mkjig4ctkpom3pu.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.ushopqrcodescanner",
+            "certificate_hash": "d03d5a3de7672a4d899f058722df9ebd3e66a760"
+          }
+        },
+        {
+          "client_id": "983678915875-9qor4e873a6p2biq81ig9qb94qhcipcm.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCUFyIm5XggCnmvnjbCE2q6YksEtb2p1bk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "983678915875-9qor4e873a6p2biq81ig9qb94qhcipcm.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "983678915875-fqpqg9lvc85ft4qo6mj0gncf5m6t2b94.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.drivoolAssignment"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

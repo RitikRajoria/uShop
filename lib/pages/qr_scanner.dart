@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 import 'package:drivool_assignment/pages/webview.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 class QRScanPage extends StatefulWidget {
   final bool popCheck;
@@ -15,13 +17,27 @@ class QRScanPage extends StatefulWidget {
 
 class _QRScanPageState extends State<QRScanPage> {
   final qrKey = GlobalKey(debugLabel: 'QR');
+  final qrShowcase = GlobalKey();
 
   QRViewController? controller;
   Barcode? barcode;
   String url = "";
+  BuildContext? mycontext;
 
   bool isflashOn = false;
   bool enableButton = false;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    Timer(Duration(milliseconds: 500), () async {
+      await controller!.flipCamera();
+      await controller!.flipCamera();
+      print('timer');
+      setState(() {});
+    });
+  }
 
   @override
   void dispose() {
@@ -45,7 +61,8 @@ class _QRScanPageState extends State<QRScanPage> {
 
       log(parts[0]);
 
-      if (parts[0] == 'https:' || parts[0] == "http:") {
+      if ((parts[0] == 'https:' || parts[0] == "http:") &&
+          str.contains('?id=')) {
         setState(() {
           enableButton = true;
         });
@@ -72,73 +89,17 @@ class _QRScanPageState extends State<QRScanPage> {
         body: Column(
           children: [
             Container(
-              height: (size.height) * 0.92,
+              height: size.height,
               width: size.width,
               child: Stack(
                 alignment: Alignment.center,
                 children: [
                   qrView(context),
                   Positioned(
-                    bottom: 20,
-                    child: _scanResult(size),
-                  ),
-                  Positioned(
                     bottom: 155,
                     child: _buttons(),
                   ),
                 ],
-              ),
-            ),
-            Container(
-              height: (size.height) * 0.08,
-              width: size.width,
-              color: Colors.grey.shade800,
-              child: ElevatedButton(
-                style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.all(
-                    Colors.grey.shade800,
-                  ),
-                ),
-                onPressed: () {
-                  final link = barcode!.code;
-                  if (link != null) {
-                    if (enableButton) {
-                      storeHistory();
-                      Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(
-                              builder: ((context) => WebViewPage(
-                                    url: link,
-                                  ))),
-                          (route) => false);
-                      url = link;
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text(
-                        'Not a valid link!',
-                        style: TextStyle(color: Colors.white),
-                      )));
-                    }
-                  }
-                },
-                child: Padding(
-                  padding: const EdgeInsets.all(4.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.link,
-                        color: Colors.teal.shade200,
-                        size: 33,
-                      ),
-                      Text(
-                        'Open Link',
-                        style: TextStyle(
-                            color: Colors.teal.shade200, fontSize: 14),
-                      ),
-                    ],
-                  ),
-                ),
               ),
             ),
           ],
@@ -179,24 +140,24 @@ class _QRScanPageState extends State<QRScanPage> {
         ),
       );
 
-  Widget _scanResult(Size size) => Container(
-        width: (size.width) * 0.8,
-        decoration: BoxDecoration(
-          color: Colors.white24,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Center(
-            child: Text(
-              barcode != null ? '${barcode!.code}' : 'Scan a code',
-              style: TextStyle(fontSize: 16, color: Colors.white),
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ),
-      );
+  // Widget _scanResult(Size size) => Container(
+  //       width: (size.width) * 0.8,
+  //       decoration: BoxDecoration(
+  //         color: Colors.white24,
+  //         borderRadius: BorderRadius.circular(8),
+  //       ),
+  //       child: Padding(
+  //         padding: const EdgeInsets.all(12.0),
+  //         child: Center(
+  //           child: Text(
+  //             barcode != null ? '${barcode!.code}' : 'Scan a code',
+  //             style: TextStyle(fontSize: 16, color: Colors.white),
+  //             maxLines: 3,
+  //             overflow: TextOverflow.ellipsis,
+  //           ),
+  //         ),
+  //       ),
+  //     );
 
   Widget qrView(BuildContext context) => QRView(
         key: qrKey,
@@ -210,6 +171,16 @@ class _QRScanPageState extends State<QRScanPage> {
         ),
       );
 
+  String linkToData(String link) {
+    var temp = link.split('id=');
+    var storeIdName = temp[1].split('&u');
+    var temp2 = storeIdName[0].substring(0, storeIdName[0].length - 3);
+    var name = temp2.replaceAll("_", " ");
+    print(storeIdName[0]);
+    print(name);
+    return storeIdName[0].toLowerCase();
+  }
+
   void onQRViewCreated(QRViewController controller) {
     setState(() => this.controller = controller);
 
@@ -217,26 +188,53 @@ class _QRScanPageState extends State<QRScanPage> {
       setState(() {
         this.barcode = barcode;
         linkChecker();
+        final link = barcode.code;
+        if (link != null) {
+          if (enableButton) {
+            final storeId = linkToData(link);
+            storeHistory(storeId);
+            url = link;
+            Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                    builder: ((context) => WebViewPage(
+                          url: link,
+                        ))),
+                (route) => false);
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(
+              'Not a valid link!',
+              style: TextStyle(color: Colors.white),
+            )));
+          }
+        }
       });
     });
   }
 
-  void storeHistory() async {
+  void storeHistory(String storeId) async {
     SharedPreferences prefsdata = await SharedPreferences.getInstance();
     List<String> historyList = [];
+    List<String> historyLinks = [];
     final bool check = prefsdata.containsKey('historyData');
-    if (check) {
+    final bool check2 = prefsdata.containsKey('historyData');
+    if (check && check2) {
       historyList = prefsdata.getStringList('historyData')!;
-      if (historyList.contains(url)) {
+      historyLinks = prefsdata.getStringList('historyLinks')!;
+      if (historyList.contains(storeId) && historyLinks.contains(url)) {
         print('already in history');
       } else {
-        historyList.add(url);
+        historyList.add(storeId);
+        historyLinks.add(url);
       }
     } else {
-      historyList.add(url);
+      historyList.add(storeId);
+      historyLinks.add(url);
     }
 
     prefsdata.setStringList('historyData', historyList);
+    prefsdata.setStringList('historyLinks', historyLinks);
   }
 
   Future<bool> showExitPopup() async {

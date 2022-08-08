@@ -1,7 +1,10 @@
 import 'package:drivool_assignment/pages/qr_scanner.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/src/foundation/key.dart';
 import 'package:flutter/src/widgets/framework.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class OnBoarding extends StatefulWidget {
@@ -12,6 +15,45 @@ class OnBoarding extends StatefulWidget {
 }
 
 class _OnBoardingState extends State<OnBoarding> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
+
+  Future<String?> signInwithGoogle() async {
+    try {
+      final GoogleSignInAccount? googleSignInAccount =
+          await _googleSignIn.signIn();
+      final GoogleSignInAuthentication googleSignInAuthentication =
+          await googleSignInAccount!.authentication;
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleSignInAuthentication.accessToken,
+        idToken: googleSignInAuthentication.idToken,
+      );
+      await _auth.signInWithCredential(credential);
+    } on FirebaseAuthException catch (e) {
+      print(e.message);
+      throw e;
+    }
+  }
+
+  User? user = FirebaseAuth.instance.currentUser;
+  late DatabaseReference ref;
+  final Future<SharedPreferences> prefs = SharedPreferences.getInstance();
+
+  void savingToDB() async {
+    final _prefs = await prefs;
+    String fcmToken = _prefs.getString('fcmToken')!;
+    String email = '${user!.email}';
+    var temp = email.split('@');
+    var temp2 = temp[0].split('.');
+    var name = temp2.join();
+
+    var currTime = DateTime.now().millisecondsSinceEpoch;
+
+    var data = {"f": fcmToken, "t": currTime};
+    await ref.child(name).set(data);
+    print(currTime);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -78,15 +120,26 @@ class _OnBoardingState extends State<OnBoarding> {
                     ),
                     ElevatedButton(
                       onPressed: () async {
-                        SharedPreferences prefs =
-                            await SharedPreferences.getInstance();
-                        prefs.setBool('tutorial', true);
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => QRScanPage(popCheck: false,),
-                          ),
-                        );
+                        if (_auth.currentUser != null) {
+                          SharedPreferences prefs =
+                              await SharedPreferences.getInstance();
+                          prefs.setBool('tutorial', true);
+                          print('user logged in');
+
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => QRScanPage(
+                                popCheck: false,
+                              ),
+                            ),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Login First!')));
+
+                          signInwithGoogle();
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         primary: Colors.green.shade500,

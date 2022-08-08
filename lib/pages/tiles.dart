@@ -1,10 +1,16 @@
 import 'dart:convert';
 
 import 'package:drivool_assignment/pages/webview.dart';
+import 'package:drivool_assignment/utils/widgets/tiles_widgets.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_database/ui/firebase_animated_list.dart';
 import 'package:flutter/material.dart';
-
+import 'package:firestore_ui/firestore_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+
+import '../models/stores_model.dart';
 
 class TilesPage extends StatefulWidget {
   const TilesPage({Key? key}) : super(key: key);
@@ -16,6 +22,33 @@ class TilesPage extends StatefulWidget {
 class _TilesPageState extends State<TilesPage> {
   late SharedPreferences sharedPreferences;
   List<String> historyList = [];
+  List<String> historyLinks = [];
+
+  User? user = FirebaseAuth.instance.currentUser;
+  late DatabaseReference ref;
+
+  List<StoresModel> models = [];
+
+  final loadRef = FirebaseDatabase.instance.ref();
+
+  Future<List<StoresModel>> extractdata() async {
+    models = [];
+    historyList.forEach((element) async {
+      final snapshot = await loadRef.child('icon/$element').get();
+      if (snapshot.exists) {
+        final data = snapshot.value;
+
+        Map<String, dynamic> dataMap = jsonDecode(jsonEncode(data));
+
+        models.add(StoresModel.fromJson(dataMap));
+        setState(() {});
+      } else {
+        print("$element not found");
+      }
+    });
+
+    return models;
+  }
 
   @override
   void initState() {
@@ -26,6 +59,7 @@ class _TilesPageState extends State<TilesPage> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -38,72 +72,23 @@ class _TilesPageState extends State<TilesPage> {
           width: size.width,
           child: Padding(
             padding: const EdgeInsets.all(10.0),
-            child: GridView.builder(
-                itemCount: historyList.length,
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 4.0,
-                  mainAxisSpacing: 4.0,
-                  childAspectRatio: 3 / 2.5,
-                ),
-                itemBuilder: (context, index) {
-                  return InkWell(
-                    onTap: () {
-                      Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => WebViewPage(
-                                    url: historyList[index],
-                                  )),
-                          (route) => false);
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(14),
-                        border:
-                            Border.all(width: 1, color: Colors.grey.shade300),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          Container(
-                            height: 60,
-                            width: 60,
-                            decoration: BoxDecoration(
-                              color: Colors.grey,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Column(
-                              children: [
-                                Text(
-                                  'Website Name',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                SizedBox(
-                                  height: 8,
-                                ),
-                                Text(
-                                  historyList[index],
-                                  style: TextStyle(
-                                    color: Colors.grey.shade300,
-                                  ),
-                                  overflow: TextOverflow.fade,
-                                  maxLines: 1,
-                                  softWrap: false,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    height: (size.height) * 0.9,
+                    child: models.isEmpty
+                        ? Center(
+                            child: Container(
+                            child: CircularProgressIndicator(),
+                          ))
+                        : gridViewStores(historyList, models),
+                  ),
+                ],
+              ),
+            ),
           )),
     );
   }
@@ -112,8 +97,12 @@ class _TilesPageState extends State<TilesPage> {
     sharedPreferences = await SharedPreferences.getInstance();
 
     List<String> data = sharedPreferences.getStringList('historyData')!;
+    List<String> linkData = sharedPreferences.getStringList('historyLinks')!;
     historyList = data;
+    historyLinks = linkData;
+
     print(historyList);
     setState(() {});
+    extractdata();
   }
 }

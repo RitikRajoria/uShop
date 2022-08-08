@@ -1,4 +1,4 @@
-package com.example.drivool_assignment
+package com.example.ushopqrcodescanner
 
 import io.flutter.embedding.android.FlutterActivity
 
