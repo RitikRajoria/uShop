@@ -62,9 +62,10 @@ class _TilesPageState extends State<TilesPage> {
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.black,
         automaticallyImplyLeading: false,
         title: Center(
-          child: Text('History'),
+          child: Text('Stores', style: TextStyle(color: Colors.white)),
         ),
       ),
       body: Container(

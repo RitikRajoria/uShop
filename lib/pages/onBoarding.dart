@@ -75,11 +75,12 @@ class _OnBoardingState extends State<OnBoarding> {
               Column(
                 children: [
                   Text(
-                    'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',
+                    'Hyperlocal',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 18,
                       letterSpacing: 1.2,
                       height: 1.5,
+                      fontWeight: FontWeight.w500,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -87,7 +88,7 @@ class _OnBoardingState extends State<OnBoarding> {
                     height: 18,
                   ),
                   Text(
-                    'There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don\'t look even slightly believable.',
+                    'Scan the store QR code of your local stores to access them online. If the store owner has never been on hyperlocal, do them a favor and help him to be online.',
                     style: TextStyle(
                       fontSize: 12,
                       letterSpacing: 1.2,

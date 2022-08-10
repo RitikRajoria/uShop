@@ -10,7 +10,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:showcaseview/showcaseview.dart';
+
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
@@ -29,6 +30,8 @@ void main() async {
   FirebaseDatabase database = FirebaseDatabase.instance;
 
   FirebaseMessaging messaging = FirebaseMessaging.instance;
+  FlutterLocalNotificationsPlugin fltNotification;
+
   NotificationSettings settings = await messaging.requestPermission(
     alert: true,
     announcement: false,
@@ -75,7 +78,7 @@ void main() async {
   ));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   final bool showWeb;
   final String? link;
   final bool onboard;
@@ -86,16 +89,60 @@ class MyApp extends StatelessWidget {
       required this.link,
       required this.onboard});
 
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  FirebaseMessaging messaging = FirebaseMessaging.instance;
+  FlutterLocalNotificationsPlugin? fltNotification;
+
+  void pushFCMtoken() async {
+    String? token = await messaging.getToken();
+    print(token);
+  }
+
+  void initMessaging() {
+    var androiInit =
+        AndroidInitializationSettings('@mipmap/ic_launcher'); //for logo
+    var iosInit = IOSInitializationSettings();
+    var initSetting = InitializationSettings(android: androiInit, iOS: iosInit);
+    fltNotification = FlutterLocalNotificationsPlugin();
+    fltNotification!.initialize(initSetting);
+    var androidDetails = AndroidNotificationDetails('1', 'channelName',
+        channelDescription: 'channelDescription',
+        importance: Importance.high,
+        playSound: true,
+        priority: Priority.high);
+    var iosDetails = IOSNotificationDetails();
+    var generalNotificationDetails =
+        NotificationDetails(android: androidDetails, iOS: iosDetails);
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      RemoteNotification? notification = message.notification;
+      AndroidNotification? android = message.notification?.android;
+      if (notification != null && android != null) {
+        fltNotification!.show(notification.hashCode, notification.title,
+            notification.body, generalNotificationDetails);
+      }
+    });
+  }
+
+  @override
+  void initState() {
+    pushFCMtoken();
+    initMessaging();
+
+    super.initState();
+  }
+
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: SplashScreen(
-            link: link,
-            showWeb: showWeb,
-            tutorial: onboard,
-          
-        
+        link: widget.link,
+        showWeb: widget.showWeb,
+        tutorial: widget.onboard,
       ),
     );
   }

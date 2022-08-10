@@ -42,6 +42,7 @@ dependencies:
   google_sign_in: ^5.4.0
   firestore_ui: ^1.24.0
   showcaseview: ^1.1.8
+  flutter_local_notifications: ^9.7.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

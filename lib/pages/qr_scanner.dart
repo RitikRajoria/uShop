@@ -17,7 +17,9 @@ class QRScanPage extends StatefulWidget {
 
 class _QRScanPageState extends State<QRScanPage> {
   final qrKey = GlobalKey(debugLabel: 'QR');
-  final qrShowcase = GlobalKey();
+
+  final Future<SharedPreferences> prefs = SharedPreferences.getInstance();
+  bool? showQRField = false;
 
   QRViewController? controller;
   Barcode? barcode;
@@ -27,9 +29,25 @@ class _QRScanPageState extends State<QRScanPage> {
   bool isflashOn = false;
   bool enableButton = false;
 
+  void checkShowcase() async {
+    final _prefs = await prefs;
+    bool check = _prefs.containsKey('qrScanCheck');
+    if (check) {
+      print("inside check");
+      showQRField = _prefs.getBool('qrScanCheck');
+    } else {
+      print("showQrfield = $showQRField");
+    }
+  }
+
+  Future<void> saveQrScanCheck() async {
+    final _prefs = await prefs;
+    print('qrscancheck set true');
+    _prefs.setBool('qrScanCheck', true);
+  }
+
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     Timer(Duration(milliseconds: 500), () async {
       await controller!.flipCamera();
@@ -37,6 +55,8 @@ class _QRScanPageState extends State<QRScanPage> {
       print('timer');
       setState(() {});
     });
+
+    checkShowcase();
   }
 
   @override
@@ -99,8 +119,48 @@ class _QRScanPageState extends State<QRScanPage> {
                     bottom: 155,
                     child: _buttons(),
                   ),
+                  Positioned(
+                    top: 135,
+                    child: showQRField! ? Container() : scanQrShowcase(),
+                  ),
                 ],
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget scanQrShowcase() {
+    return Container(
+      height: 90,
+      width: 350,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Padding(
+        padding:
+            const EdgeInsets.only(top: 10, bottom: 10, left: 15, right: 15),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Text(
+              'Scan Qr',
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w500),
+            ),
+            Text(
+              'Lorem Ipsum doler sit amet. Lorem Ipsum doler sit amet.',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+              ),
+              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -140,24 +200,6 @@ class _QRScanPageState extends State<QRScanPage> {
         ),
       );
 
-  // Widget _scanResult(Size size) => Container(
-  //       width: (size.width) * 0.8,
-  //       decoration: BoxDecoration(
-  //         color: Colors.white24,
-  //         borderRadius: BorderRadius.circular(8),
-  //       ),
-  //       child: Padding(
-  //         padding: const EdgeInsets.all(12.0),
-  //         child: Center(
-  //           child: Text(
-  //             barcode != null ? '${barcode!.code}' : 'Scan a code',
-  //             style: TextStyle(fontSize: 16, color: Colors.white),
-  //             maxLines: 3,
-  //             overflow: TextOverflow.ellipsis,
-  //           ),
-  //         ),
-  //       ),
-  //     );
 
   Widget qrView(BuildContext context) => QRView(
         key: qrKey,
@@ -194,13 +236,15 @@ class _QRScanPageState extends State<QRScanPage> {
             final storeId = linkToData(link);
             storeHistory(storeId);
             url = link;
-            Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(
-                    builder: ((context) => WebViewPage(
-                          url: link,
-                        ))),
-                (route) => false);
+            saveQrScanCheck().then((value) {
+              Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(
+                      builder: ((context) => WebViewPage(
+                            url: link,
+                          ))),
+                  (route) => false);
+            });
           } else {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                 content: Text(
